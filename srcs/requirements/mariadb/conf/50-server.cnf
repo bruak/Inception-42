@@ -1,0 +1,12 @@
+[server]
+[mysqld]
+user                    = mysql
+port					= 3306
+datadir                 = /var/lib/mysql
+log_error				= /var/log/mysql/error.log
+bind-address            = 0.0.0.0
+lc-messages             = en_US
+character-set-server 	= utf8mb4
+[embedded]
+[mariadb]
+[mariadb-10.5]
