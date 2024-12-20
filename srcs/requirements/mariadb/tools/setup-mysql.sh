@@ -33,16 +33,22 @@ if [ -z "$MYSQL_ROOT_PASSWORD" ] || [ -z "$MYSQL_DATABASE" ] || [ -z "$MYSQL_USE
 fi
 
 
-##############################################
+####################################################
 # *sleep 5 is for waiting for the database to start.
-##############################################
+# 2> /dev/mariadb-output.txt is for redirecting the error output of the mariadb service to a file.
+####################################################
 
-service mariadb start
+service mariadb start 2> /dev/mariadb-error-output.txt
 
 sleep 5 
 
-echo -e "Setting root password${RESET}..." && \
-mariadb -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';"
+echo -e "Checking permissions for user [${BLUE}$MYSQL_USER${RESET}] on database [${BLUE}$MYSQL_DATABASE${RESET}]..." && \
+if mariadb -u root -p"$MYSQL_ROOT_PASSWORD" -e "SHOW GRANTS FOR '$MYSQL_USER'@'%';" | grep "$MYSQL_DATABASE" > /dev/mariadb-error-output.txt; then
+    echo -e "${YELLOW}User $MYSQL_USER already has permissions on database [${BLUE}$MYSQL_DATABASE${RESET}]${YELLOW}. Skipping grant.${RESET}"
+else
+    echo -e "Setting root password${RESET}..." && \
+    mariadb -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASSWORD';"
+fi
 
 echo -e "Setting database [${BLUE}$MYSQL_DATABASE]${RESET}..." && \
 mariadb -u root -p"$MYSQL_ROOT_PASSWORD" -e "CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE;"

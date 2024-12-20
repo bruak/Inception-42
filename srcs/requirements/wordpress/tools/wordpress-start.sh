@@ -7,6 +7,10 @@ BLUE='\033[34m'
 YELLOW='\033[33m'
 RESET='\033[0m'
 
+##############################################
+# sleep 10 is for waiting the database to be ready
+##############################################
+
 sleep 10
 
 chown -R www-data: /var/www/*
@@ -45,35 +49,61 @@ echo -e "MAIL_EXTENTION: ${BLUE}[$MAIL_EXTENTION]${RESET}"
 
 if [ ! -f /var/www/html/wp-config.php ]; then
 
-	while ! wp-cli core download --allow-root ; do
-		echo -e "${RED}Core download failed. ${RESET}"
+max_attempts=10
+attempt=1
+	until wp-cli core download --allow-root; do
+	    if [ $attempt -ge $max_attempts ]; then
+	        echo -e "${RED}Core download failed, reached maximum attempts, max attempts: $max_attempts${RESET}"
+	        exit 1
+	    fi
+	    echo -e "${YELLOW}Core download failed, retrying in 2 seconds... (Attempt: $attempt/${max_attempts})${RESET}"
+	    attempt=$(( $attempt + 1 ))
+	    sleep 2
 	done
 
+attempt=1
 	until wp-cli config create --allow-root \
-		--dbname=$MYSQL_DATABASE \
-		--dbuser=$MYSQL_USER \
-		--dbpass=$MYSQL_PASSWORD \
-		--dbhost=mariadb 
-	do
-		echo -e "${YELLOW}Database connection failed, retrying in 5 seconds...${RESET}"
-		sleep 5
+	    --dbname=$MYSQL_DATABASE \
+	    --dbuser=$MYSQL_USER \
+	    --dbpass=$MYSQL_PASSWORD \
+	    --dbhost=mariadb; do
+	    if [ $attempt -ge $max_attempts ]; then
+	        echo -e "${RED}Database configuration failed, reached maximum attempts. Max attempts: $max_attempts${RESET}"
+	        exit 1
+	    fi
+	    echo -e "${YELLOW}Database connection failed, retrying in 2 seconds... (Attempt: $attempt/${max_attempts})${RESET}"
+	    attempt=$((attempt + 1))
+	    sleep 2
 	done
 
-if [ ! -f /var/www/html/wp-config.php ]; then
-        echo -e "${RED}Error: wp-config.php file cannot creating, check the database information.${RESET}"
-        exit 1
-    fi
+attempt=1
+	until wp-cli core install --allow-root \
+	    --url=$DOMAIN_NAME \
+	    --title="wordpress" \
+	    --admin_user=$WP_ADMIN_LOGIN \
+	    --admin_password=$MYSQL_PASSWORD \
+	    --admin_email=$WP_ADMIN_EMAIL; do
+	    if [ $attempt -ge $max_attempts ]; then
+	        echo -e "${RED}Core installation failed, reached maximum attempts. Max attempts: $max_attempts${RESET}"
+	        exit 1
+	    fi
+	    echo -e "${YELLOW}Core installation failed, retrying in 2 seconds... (Attempt: $attempt/${max_attempts})${RESET}"
+	    attempt=$((attempt + 1))
+	    sleep 2
+	done
 
-	wp-cli core install --allow-root \
-		--url=$DOMAIN_NAME \
-		--title="wordpress" \
-		--admin_user=$WP_ADMIN_LOGIN \
-		--admin_password=$MYSQL_PASSWORD \
-		--admin_email=$WP_ADMIN_EMAIL
-
-	wp-cli user create --allow-root \
-		$MYSQL_USER $MAIL_EXTENTION \
-    	--user_pass=$MYSQL_PASSWORD
+attempt=1
+	until wp-cli user create --allow-root \
+	    $MYSQL_USER $MAIL_EXTENTION \
+	    --user_pass=$MYSQL_PASSWORD; do
+	    if [ $attempt -ge $max_attempts ]; then
+	        echo -e "${RED}User creation failed, reached maximum attempts. Max attempts: $max_attempts${RESET}"
+	        exit 1
+	    fi
+	    echo -e "${YELLOW}User creation failed, retrying in 2 seconds... (Attempt: $attempt/${max_attempts})${RESET}"
+	    attempt=$((attempt + 1))
+	    sleep 2
+	done
 
 fi
 
@@ -81,6 +111,6 @@ wp-cli user list --allow-root | while IFS= read -r line; do
     echo -e "${BLUE}$line${RESET}"
 done
 
-echo -e "${GREEN}Wordpress ready, Website is online right now!!!${RESET}"
+echo -e "${GREEN}WordPress installation completed successfully.${RESET}"
 
 exec "$@"

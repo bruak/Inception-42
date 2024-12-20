@@ -1,2 +1,0 @@
-sudo cp -r /home/bsoykan/Masaüstü/inception/srcs/requirements/nginx/tools/html/dist/* /var/lib/docker/volumes/srcs_wordpress_data/_data/
-sudo cp -r /home/bsoykan/Masaüstü/inc/srcs/requirements/nginx/tools/html/dist/* $HOME/data/wordpress

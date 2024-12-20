@@ -3,6 +3,7 @@
 CYAN='\033[36m'
 GREEN='\033[32m'
 RED='\033[31m'
+YELLOW='\033[33m'
 RESET='\033[0m'
 
 if [ -f /run/secrets/credentials ]; then
@@ -10,7 +11,7 @@ if [ -f /run/secrets/credentials ]; then
 	export CRT=$(grep -E '^CRT=' /run/secrets/credentials | cut -d '=' -f2 | tr -d '[:space:]')
 	export CRT_KEY=$(grep -E '^CRT_KEY=' /run/secrets/credentials | cut -d '=' -f2 | tr -d '[:space:]')	
 else
-    echo -e "${RED}credentials secret file not found, didn't get information for SSL.${RESET}"
+    echo -e "${RED}Credentials secret file not found, didn't get information for SSL.${RESET}"
 fi
 
 if [ -z "$SUBJ" ] || [ -z "$CRT" ] || [ -z "$CRT_KEY" ]; then
@@ -26,9 +27,9 @@ if [ ! -f $CRT ]; then
 	-subj "$SUBJ" \
 	-keyout $CRT_KEY \
 	-out $CRT
+else
+	echo -e "${YELLOW}Certificate already exists, skipping...${RESET}"
 fi
-
-
 
 sed -i "s|!CERTIFICATE_KEY_LOCATION!|${CRT_KEY}|g" \
 	/etc/nginx/conf.d/https.conf

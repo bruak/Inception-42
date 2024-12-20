@@ -5,6 +5,7 @@ all: up
 up:
 	mkdir -p ${HOME}/data/wordpress
 	mkdir -p ${HOME}/data/mariadb
+	sudo mount --make-shared /
 	docker compose -f $(COMPOSE_DIR)/docker-compose.yml up --build
 
 down:
