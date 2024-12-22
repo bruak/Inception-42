@@ -104,13 +104,16 @@ attempt=1
 	    attempt=$((attempt + 1))
 	    sleep 2
 	done
+	
+	wp-cli user list --allow-root | while IFS= read -r line; do
+		echo -e "${BLUE}$line${RESET}"
+	done
 
+	echo -e "${GREEN}WordPress installation completed successfully.${RESET}"
+else 
+	echo -e "${GREEN}WordPress is already installed.${RESET}"
 fi
 
-wp-cli user list --allow-root | while IFS= read -r line; do
-    echo -e "${BLUE}$line${RESET}"
-done
 
-echo -e "${GREEN}WordPress installation completed successfully.${RESET}"
 
 exec "$@"

@@ -49,4 +49,20 @@ wordpress:
 	mkdir -p ${HOME}/data/wordpress
 	docker compose -f srcs/docker-compose.yml up --build wordpress
 
-.PHONY: all up down restart build clean fclean re
+host:
+	@HOSTS_FILE="/etc/hosts"; \
+	ENTRY="127.0.0.1       bsoykan.42.fr"; \
+	if [ -f $$HOSTS_FILE ]; then \
+	    if grep -Fxq "$$ENTRY" $$HOSTS_FILE; then \
+	        echo "Domain already exists in this directory-> $$HOSTS_FILE, domain-> $$ENTRY"; \
+	    else \
+	        echo "Adden domain name in this directory-> $$HOSTS_FILE, domain-> $$ENTRY"; \
+	        sudo sed -i "1i $$ENTRY" $$HOSTS_FILE; \
+	    fi \
+	else \
+	    echo "File not found: $$HOSTS_FILE"; \
+		echo "Please add the domain manually, this problem couse by the OS. This setup is for Linux OS."; \
+	    exit 1; \
+	fi
+
+.PHONY: all up down restart build clean fclean re host

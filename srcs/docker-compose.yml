@@ -13,6 +13,7 @@ volumes:
       type: none
       o: bind
       device: /home/bsoykan/data/mariadb
+
   wordpress_volume:
     driver : local
     driver_opts:

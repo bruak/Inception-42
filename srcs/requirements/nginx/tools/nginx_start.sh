@@ -12,6 +12,7 @@ if [ -f /run/secrets/credentials ]; then
 	export CRT_KEY=$(grep -E '^CRT_KEY=' /run/secrets/credentials | cut -d '=' -f2 | tr -d '[:space:]')	
 else
     echo -e "${RED}Credentials secret file not found, didn't get information for SSL.${RESET}"
+	exit 1
 fi
 
 if [ -z "$SUBJ" ] || [ -z "$CRT" ] || [ -z "$CRT_KEY" ]; then
